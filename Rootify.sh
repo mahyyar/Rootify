@@ -64,7 +64,10 @@ if [[ ! -f "$SSH_CONF" ]]; then
 fi
 
 log "Modifying SSH configuration..."
-
+if grep -qE '^\s*Include /etc/ssh/sshd_config.d/\*.conf' "$SSH_CONF"; then
+    log "Commenting out Include directive in SSH config..."
+    sed -i -E 's/^(\s*)Include\s+\/etc\/ssh\/sshd_config\.d\/\*\.conf/\1#Include \/etc\/ssh\/sshd_config.d\/*.conf/' "$SSH_CONF"
+fi
 if grep -qE '^\s*PermitRootLogin' "$SSH_CONF"; then
     sed -i -E 's/^\s*PermitRootLogin.*/PermitRootLogin yes/' "$SSH_CONF"
 else
@@ -85,10 +88,10 @@ if command -v systemctl &>/dev/null; then
     elif systemctl list-unit-files | grep -q ssh; then
         systemctl restart ssh
     else
-        service ssh restart  service sshd restart  log "SSH restart failed."
+        service ssh restart service sshd restart log "SSH restart failed."
     fi
 else
-    service ssh restart  service sshd restart  log "SSH restart failed."
+    service ssh restart service sshd restart log "SSH restart failed."
 fi
 
 log "SSH restarted."
